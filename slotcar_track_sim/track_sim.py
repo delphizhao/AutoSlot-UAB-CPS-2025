@@ -144,8 +144,8 @@ class App:
         
         #print(f"[{var_name}] updated to: {new_value} {unit}") # Debug print removed for cleaner output
         if var_name == 'voltage':
-                # 中文：如果 cars 还没创建，就不要更新
-                if hasattr(self, "cars") and len(self.cars) > 0:
+                # 如果 cars 还没创建，就不要更新
+            if hasattr(self, "cars") and len(self.cars) > 0:
                     self.cars[0].iv = new_value
 
             
