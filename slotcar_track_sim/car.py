@@ -8,6 +8,7 @@ car1_img = Image.open('car1.png')
 
 class Car:
     def __init__(self, x, y, b, img, name, piecewise_curvature, piecewise_angle, piecewise_position):
+        self.cars = []
         self.fi = img
         self.name = name
 
