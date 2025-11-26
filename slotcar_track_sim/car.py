@@ -35,7 +35,7 @@ class Car:
         self.alpha = 0.0            # slip angle [rad]
         self.img = None
         self.photo = None
-        self.derailed = False       # has the car left the slot?
+        self.derailed = False       # kept for completeness, not used to freeze
 
         # ===== Inputs =====
         self.iv = 0.0               # input voltage [V]
@@ -67,15 +67,10 @@ class Car:
     #   Time step: simple motor model + cornering + slip
     # ==========================================================
     def tick(self, deltat: float) -> None:
-        if self.derailed:
-            # Once derailed we freeze the dynamics but still draw the car
-            return
-
         m = max(self.mass, 1e-3)
         g = 9.81
 
         # ---------- 1) Longitudinal dynamics (simplified) ----------
-        # Map voltage [0..12] to a bounded acceleration [0..a_max].
         V = max(self.iv, 0.0)
         V = min(V, 12.0)
 
@@ -113,7 +108,6 @@ class Car:
             Fc_demand = m * self.v * self.v * abs_c
 
         # ---------- 3) Available friction (including magnet downforce) ----------
-        # Normal force with magnet reinforcement
         k_mag = 2.0  # stronger effect of the magnet slider
         N_r = m * g * (1.0 + k_mag * self.mag_param / 50.0)
         Fr_max_static = self.us * N_r
@@ -135,22 +129,20 @@ class Car:
             a_lat = F_lat / m
             self.v_lat += a_lat * deltat
 
-        # Limit lateral speed just in case
+        # Limit lateral speed
         max_v_lat = 10.0  # m/s
         if self.v_lat > max_v_lat:
             self.v_lat = max_v_lat
         elif self.v_lat < -max_v_lat:
             self.v_lat = -max_v_lat
 
-        # ---------- 5) Integrate lateral offset & check derailment ----------
+        # ---------- 5) Integrate lateral offset & clamp to lane ----------
         self.lat_offset += self.v_lat * deltat
 
         max_offset = 0.04  # 4 cm from lane center
         if abs(self.lat_offset) > max_offset:
-            # Clamp to boundary and mark as derailed
+            # Clamp to boundary, but do not freeze the car
             self.lat_offset = math.copysign(max_offset, self.lat_offset)
-            self.derailed = True
-            self.v = 0.0
             self.v_lat = 0.0
 
         # Slip angle for drawing
